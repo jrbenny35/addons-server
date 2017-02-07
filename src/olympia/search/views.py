@@ -295,8 +295,8 @@ def _build_suggestions(request, cat, suggester):
 def name_only_query(q):
     d = {}
 
-    rules = {'match': {'query': q, 'boost': 3, 'analyzer': 'standard'},
-             'match': {'query': q, 'boost': 4, 'type': 'phrase'},
+    rules = {'match': {'query': q, 'boost': 3, 'analyzer': 'standard',
+                       'type': 'phrase'},
              'fuzzy': {'value': q, 'boost': 2, 'prefix_length': 4},
              'startswith': {'value': q, 'boost': 1.5}}
     for k, v in rules.iteritems():
