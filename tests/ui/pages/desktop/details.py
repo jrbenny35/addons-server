@@ -157,7 +157,7 @@ class Details(Base):
     def click_whats_this_license(self):
         self.selenium.find_element(*self._whats_this_license_locator).click()
         from pages.desktop.addons_site import UserFAQ
-        return UserFAQ(self.base_url, self.selenium)
+        return UserFAQ(self.selenium, self.base_url)
 
     @property
     def license_site(self):
@@ -262,7 +262,7 @@ class Details(Base):
         If the offset is > 1000, the page has scrolled to the information section and it
         is in view.
         """
-        return (self.selenium.execute_script('return window.pageYOffset')) > 1000
+        return (self.selenium.execute_script('return window.pageYOffset')) > 400
 
     @property
     def are_tags_visible(self):
@@ -294,7 +294,7 @@ class Details(Base):
         _name_locator = (By.CSS_SELECTOR, 'div.summary > h3')
 
         def __init__(self, base_url, selenium, element):
-            Page.__init__(self, base_url, selenium)
+            Page.__init__(self,selenium, base_url)
             self._root_element = element
 
         def click_collection(self):
@@ -339,7 +339,8 @@ class Details(Base):
 
     @property
     def author_addons(self):
-        return self.AuthorAddOns(self.base_url, self.selenium)
+        return self.AuthorAddOns(self, self.selenium.find_element(
+            *self._author_addons_locator))
 
     class AuthorAddOns(Region):
 
@@ -358,7 +359,9 @@ class Details(Base):
 
     @property
     def previews(self):
-        return self.Previews(self.base_url, self.selenium)
+        return self.Previews(self, self.selenium.find_element(
+            By.CSS_SELECTOR, 'section.previews'
+        ))
 
     class Previews(Region):
 
@@ -367,17 +370,19 @@ class Details(Base):
 
         @property
         def thumbnails(self):
-            return [self.Thumbnail(self.base_url, self.selenium, el) for el in
+            return [self.Thumbnail(self, el) for el in
                     self.root.find_elements(*self._thumbnail_locator)]
 
         class Thumbnail(Region):
 
             _image_locator = (By.TAG_NAME, 'img')
+            _image_root_locator = (By.CSS_SELECTOR, '#lightbox > section')
 
             def click(self):
                 self.root.click()
                 from pages.desktop.regions.image_viewer import ImageViewer
-                viewer = ImageViewer(self.base_url, self.selenium)
+                viewer = ImageViewer(self, self.selenium.find_element(
+                    *self._image_root_locator))
                 WebDriverWait(self.selenium, self.timeout).until(lambda s: viewer.is_displayed)
                 return viewer
 
@@ -430,7 +435,7 @@ class Details(Base):
         _username_locator = (By.CSS_SELECTOR, 'p.byline a')
 
         def __init__(self, base_url, selenium, element):
-            Page.__init__(self, base_url, selenium)
+            Page.__init__(self, selenium, base_url)
             self._root_element = element
 
         @property
@@ -440,12 +445,12 @@ class Details(Base):
         def click_username(self):
             self._root_element.find_element(*self._username_locator).click()
             from pages.desktop.user import User
-            return User(self.base_url, self.selenium)
+            return User(self.selenium, self.base_url)
 
     def click_to_write_review(self):
         self.selenium.find_element(*self._add_review_link_locator).click()
         from pages.desktop.addons_site import WriteReviewBlock
-        return WriteReviewBlock(self.base_url, self.selenium)
+        return WriteReviewBlock(self.selenium, self.base_url)
 
     @property
     def development_channel_text(self):
@@ -482,7 +487,7 @@ class Details(Base):
         _make_contribution_button_locator = (By.ID, 'contribute-confirm')
 
         def __init__(self, base_url, selenium):
-            Page.__init__(self, base_url, selenium)
+            Page.__init__(self, selenium, base_url)
             self.wait.until(expected.visibility_of_element_located(
                 self._make_contribution_button_locator),
                 'Make Contribution button is not displayed')

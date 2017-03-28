@@ -40,19 +40,19 @@ def fxa_account(my_base_url):
     return FxATestAccount(url)
 
 
-@pytest.fixture(scope='session')
-def jwt_issuer(base_url, variables):
+@pytest.fixture
+def jwt_issuer(my_base_url, variables):
     try:
-        hostname = urlparse.urlsplit(base_url).hostname
+        hostname = urlparse.urlsplit(my_base_url).hostname
         return variables['api'][hostname]['jwt_issuer']
     except KeyError:
         return os.getenv('JWT_ISSUER')
 
 
-@pytest.fixture(scope='session')
-def jwt_secret(base_url, variables):
+@pytest.fixture
+def jwt_secret(my_base_url, variables):
     try:
-        hostname = urlparse.urlsplit(base_url).hostname
+        hostname = urlparse.urlsplit(my_base_url).hostname
         return variables['api'][hostname]['jwt_secret']
     except KeyError:
         return os.getenv('JWT_SECRET')
@@ -222,7 +222,9 @@ def ui_addon(transactional_db, create_superuser):
         developer_comments='This is a testing addon, used within pytest.',
         is_experimental=True,
     )
-    first_preview = Preview.objects.create(addon=addon, position=1)
+    Preview.objects.create(addon=addon, position=1)
+    Preview.objects.create(addon=addon, position=2)
+    Preview.objects.create(addon=addon, position=3)
     Review.objects.create(addon=addon, rating=5, user=user_factory())
     Review.objects.create(addon=addon, rating=3, user=user_factory())
     Review.objects.create(addon=addon, rating=2, user=user_factory())
@@ -232,6 +234,67 @@ def ui_addon(transactional_db, create_superuser):
                              addon=addon, listed=True)
     version_factory(addon=addon, file_kw={'status': amo.STATUS_BETA},
                     version='1.1beta')
+    addon.save()
+    generate_collection(addon, app=FIREFOX,
+                        author=UserProfile.objects.get(username='uitest'),
+                        )
+
+    print('Created custom addon for testing successfully')
+
+
+@pytest.fixture
+def ui_addon_2(transactional_db, create_superuser):
+    import random
+
+    from olympia import amo
+    from olympia.amo.tests import addon_factory, user_factory, version_factory, collection_factory
+    from olympia.addons.forms import icons
+    from olympia.addons.models import Addon, AddonCategory, Category, Preview, AddonUser
+    from olympia.addons.utils import generate_addon_guid
+    from olympia.constants.categories import CATEGORIES
+    from olympia.constants.applications import APPS, FIREFOX
+    from olympia.reviews.models import Review
+    from olympia.users.models import UserProfile
+    from olympia.landfill.collection import generate_collection
+    from olympia.landfill.user import generate_addon_user_and_category, generate_user
+    from olympia.landfill.categories import generate_categories
+    from olympia.constants.base import (
+        ADDON_EXTENSION, ADDON_PERSONA, STATUS_PUBLIC)
+
+    default_icons = [x[0] for x in icons() if x[0].startswith('icon/')]
+    addon = addon_factory(
+        status=STATUS_PUBLIC,
+        type=ADDON_EXTENSION,
+        average_daily_users=42422,
+        users=[UserProfile.objects.get(username='uitest')],
+        average_rating=4.22,
+        description=u'My Addon description',
+        file_kw={
+            'hash': 'fakehash',
+            'platform': amo.PLATFORM_ALL.id,
+            'size': 42,
+        },
+        guid=generate_addon_guid(),
+        homepage=u'https://www.example.org/',
+        icon_type=random.choice(default_icons),
+        name=u'Ui-Test-2',
+        public_stats=True,
+        slug='ui-test-2',
+        summary=u'My Addon summary',
+        support_email=u'support@example.org',
+        support_url=u'https://support.example.org/support/ui-test-addon/',
+        tags=['some_tag', 'another_tag', 'ui-testing', 'selenium', 'python'],
+        total_reviews=778,
+        weekly_downloads=2147483648,
+        developer_comments='This is another testing addon, used within pytest.',
+        is_experimental=True,
+    )
+    first_preview = Preview.objects.create(addon=addon, position=1)
+    Review.objects.create(addon=addon, rating=5, user=user_factory())
+    Review.objects.create(addon=addon, rating=3, user=user_factory())
+    Review.objects.create(addon=addon, rating=2, user=user_factory())
+    Review.objects.create(addon=addon, rating=1, user=user_factory())
+    addon.reload()
     addon.save()
     generate_collection(addon, app=FIREFOX,
                         author=UserProfile.objects.get(username='uitest'),
@@ -308,7 +371,6 @@ def live_server(request, transactional_db):
     server.stop()
 
 
-
 @pytest.fixture
 def jwt_token(base_url, jwt_issuer, jwt_secret):
     payload = {
@@ -316,3 +378,15 @@ def jwt_token(base_url, jwt_issuer, jwt_secret):
         'iat': datetime.datetime.utcnow(),
         'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=30)}
     return jwt.encode(payload, jwt_secret, algorithm='HS256')
+
+
+@pytest.fixture
+def logged_in(my_base_url, selenium, user):
+    selenium.get(my_base_url)
+    selenium.delete_all_cookies()
+    selenium.add_cookie({
+        'name': user['session_cookie']['name'],
+        'value': user['session_cookie']['value'],
+        'path': '/',
+        'domain': urlparse.urlsplit(my_base_url).hostname,
+        'secure': True})

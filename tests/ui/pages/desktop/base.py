@@ -50,6 +50,12 @@ class Base(Page):
             lambda s: s.title == self.selenium.title)
         return True
 
+    def is_element_visible(self, *locator):
+        try:
+            return self.selenium.find_element(*locator).is_displayed()
+        except (NoSuchElementException, ElementNotVisibleException):
+            return False
+
     class Header(Region):
 
         # other applications
@@ -60,6 +66,9 @@ class Base(Page):
         _login_locator = (By.CSS_SELECTOR, '#aux-nav .account a:nth-child(2)')
         _logout_locator = (By.CSS_SELECTOR, '.logout > a')
         _user_locator = (By.CSS_SELECTOR, '#aux-nav .account .user')
+
+        _login_locator = (By.CSS_SELECTOR, "#aux-nav li.account a:nth-child(2)")
+        _register_locator = (By.CSS_SELECTOR, "#aux-nav li.account a:nth-child(1)")
 
         _site_navigation_menus_locator = (By.CSS_SELECTOR, "#site-nav > ul > li")
         _site_navigation_min_number_menus = 4
@@ -114,3 +123,25 @@ class Base(Page):
             action.perform()
             self.wait.until(lambda s: self.is_element_displayed(
                 *self._login_locator))
+
+        def hover_over_other_apps_menu(self):
+            hover_element = self.selenium.find_element(*self._other_applications_locator)
+            ActionChains(self.selenium).\
+                move_to_element(hover_element).\
+                perform()
+
+        @property
+        def menu_name(self):
+            return self.selenium.find_element(*self._other_applications_locator).text
+
+        @property
+        def is_register_link_visible(self):
+            return self.is_element_visible(*self._register_locator)
+
+        @property
+        def is_login_link_visible(self):
+            return self.is_element_visible(*self._login_locator)
+
+        @property
+        def is_other_apps_dropdown_menu_visible(self):
+            return self.selenium.find_element(*self._other_applications_menu_locator).is_displayed()
