@@ -233,7 +233,7 @@ def ui_addon(transactional_db, create_superuser):
     AddonUser.objects.create(user=user_factory(username='ui-tester2'),
                              addon=addon, listed=True)
     version_factory(addon=addon, file_kw={'status': amo.STATUS_BETA},
-                    version='1.1beta')
+                    version='1.1.22')
     addon.save()
     generate_collection(addon, app=FIREFOX,
                         author=UserProfile.objects.get(username='uitest'),
@@ -381,12 +381,30 @@ def jwt_token(base_url, jwt_issuer, jwt_secret):
 
 
 @pytest.fixture
-def logged_in(my_base_url, selenium, user):
-    selenium.get(my_base_url)
-    selenium.delete_all_cookies()
-    selenium.add_cookie({
-        'name': user['session_cookie']['name'],
-        'value': user['session_cookie']['value'],
+def logged_in(my_base_url, selenium):
+    from importlib import import_module
+
+    from django.contrib.auth import (
+        SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY)
+    from django.conf import settings
+
+    from olympia.users.models import UserProfile
+
+    user = UserProfile.objects.create(username='uitest-review')
+    SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
+
+    session = SessionStore()
+    session[SESSION_KEY] = user.id
+    session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[0]
+    session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+    session.save()
+
+    domain = my_base_url.split(':')[-2].split('/')[-1]
+    cookie = {
+        'name': settings.SESSION_COOKIE_NAME,
+        'value': session.session_key,
         'path': '/',
-        'domain': urlparse.urlsplit(my_base_url).hostname,
-        'secure': True})
+        'domain': domain
+    }
+
+    return cookie

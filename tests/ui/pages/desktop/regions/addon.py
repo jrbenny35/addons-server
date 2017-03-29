@@ -19,4 +19,4 @@ class AddOn(Region):
     def click(self):
         self.root.find_element(*self._name_locator).click()
         from pages.desktop.details import Details
-        return Details(self.base_url, self.selenium)
+        return Details(self.selenium, "Ui_Test")

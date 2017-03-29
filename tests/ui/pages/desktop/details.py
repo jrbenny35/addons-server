@@ -241,8 +241,9 @@ class Details(Base):
     def click_view_source_code(self):
         self.selenium.find_element(*self._view_the_source_locator).click()
         from pages.desktop.addons_site import ViewAddonSource
-        addon_source = ViewAddonSource(self.base_url, self.selenium)
-        WebDriverWait(self.selenium, self.timeout).until(lambda s: addon_source.is_file_viewer_visible)
+        addon_source = ViewAddonSource(self.selenium, self.base_url)
+        # Removing due to no source code with custom addon
+        # WebDriverWait(self.selenium, self.timeout).until(lambda s: addon_source.is_file_viewer_visible)
         return addon_source
 
     @property
@@ -283,7 +284,7 @@ class Details(Base):
 
     @property
     def is_reviews_section_in_view(self):
-        return self.selenium.execute_script('return window.pageYOffset') > 1000
+        return self.selenium.execute_script('return window.pageYOffset') > 400
 
     @property
     def is_reviews_section_visible(self):
@@ -300,7 +301,7 @@ class Details(Base):
         def click_collection(self):
             self._root_element.find_element(*self._name_locator).click()
             from pages.desktop.collections import Collections
-            return Collections(self.base_url, self.selenium)
+            return Collections(self.selenium, self.base_url)
 
         @property
         def name(self):
@@ -354,7 +355,7 @@ class Details(Base):
 
         @property
         def addons(self):
-            return [AddOn(self.base_url, self.selenium, el) for el in
+            return [AddOn(self, el) for el in
                     self.root.find_elements(*self._addon_locator)]
 
     @property
@@ -413,7 +414,7 @@ class Details(Base):
         WebDriverWait(self.selenium, self.timeout).until(
             lambda s: self.is_element_present(*self._reviews_section_header_locator))
         self.selenium.find_element(*self._review_link_locator).click()
-        WebDriverWait(self.selenium, self.timeout).until(lambda s: (self.selenium.execute_script('return window.pageYOffset')) > 1000)
+        WebDriverWait(self.selenium, self.timeout).until(lambda s: (self.selenium.execute_script('return window.pageYOffset')) > 400)
 
     def expand_version_information(self):
         self.selenium.find_element(*self._version_information_button_locator).click()
