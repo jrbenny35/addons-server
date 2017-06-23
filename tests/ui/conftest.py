@@ -50,6 +50,15 @@ def capabilities(capabilities):
     # In order to run these tests in Firefox 48, marionette is required
     capabilities['marionette'] = True
     capabilities['acceptInsecureCerts'] = True
+
+    if os.getenv('TOXENV') == 'mobile-ui-tests':
+        capabilities['browserName'] = 'Firefox'
+        capabilities['appiumVersion'] = '1.6.4'
+        capabilities['deviceName'] = 'iPhone 7 Simulator'
+        capabilities['deviceOrientation'] = 'portrait'
+        capabilities['platformVersion'] = '10.3'
+        capabilities['platformName'] = 'iOS'
+
     return capabilities
 
 
@@ -295,6 +304,7 @@ def gen_webext(create_superuser, pytestconfig, tmpdir, transactional_db):
     from olympia.versions.models import Version
     from olympia.amo.tests.test_helpers import get_addon_file
     from django.utils.translation import activate
+    from django.core.files.uploadedfile import SimpleUploadedFile
     import os
 
     manifest = tmpdir.mkdir('webext').join('manifest.json')
@@ -361,21 +371,59 @@ def gen_webext(create_superuser, pytestconfig, tmpdir, transactional_db):
 
 
 @pytest.fixture
-def gen_webext2(addon):
+def gen_webext2(create_superuser):
     import django
+    import mimetypes
+    from django.conf import settings
 
     from olympia.files.models import File, FileUpload
-    from olympia.versions.models import Version
-    from olympia.amo.tests.test_helpers import get_addon_file
-    from django.utils.translation import activate
     from olympia.files.tests.test_helpers import get_file
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from olympia.editors.helpers import ReviewHelper
+    from olympia.users.models import UserProfile
+    from olympia.amo.tests import addon_factory, copy_file_to_temp
 
-    activate('en')
-
-    f = File()
-    upload = FileUpload.objects.create(path=get_file('webextension_no_id.xpi'), hash=f.generate_hash(get_file('webextension_no_id.xpi')))
+    addon = addon_factory()
+    if settings.CELERY_ALWAYS_EAGER:
+        print("IS TRUE")
+    user = UserProfile.objects.get(username='uitest')
+    user_factory(id=settings.TASK_USER_ID)
+    # f = File()
+    # upload = FileUpload.objects.create(path=get_file('webextension_no_id.xpi'), hash=f.generate_hash(get_file('webextension_no_id.xpi')))
     # upload = FileUpload.objects.create(path=tmpdir.join('webext_comp.xpi'))
-    Version.from_upload(upload=upload, addon=addon, platforms=[amo.PLATFORM_ALL.id], channel=amo.RELEASE_CHANNEL_LISTED)
+    # Version.from_upload(upload=upload, addon=addon, platforms=[amo.PLATFORM_ALL.id], channel=amo.RELEASE_CHANNEL_LISTED)
+    file_to_upload = 'webextension_no_id.xpi'
+    file_path = get_file(file_to_upload)
+
+    # make sure we are not using the file in the source-tree but a temporary
+    # one to avoid the files get moved somewhere else and deleted from source
+    # tree
+    with copy_file_to_temp(file_path) as temporary_path:
+        data = open(temporary_path).read()
+        filedata = SimpleUploadedFile(
+            file_to_upload,
+            data,
+            content_type=mimetypes.guess_type(file_to_upload)[0])
+
+    # now, lets upload the file into the system
+    from olympia.devhub.views import handle_upload
+
+    upload = handle_upload(
+        filedata=filedata,
+        user=user,
+        channel=amo.RELEASE_CHANNEL_LISTED,
+        addon=addon,
+        submit=True
+    )
+
+    # find the latest version that we just uploaded (should be version 1.0
+    # which is what webextension_no_id.xpi defines)
+    latest_version = upload.addon.find_latest_version(amo.RELEASE_CHANNEL_LISTED)
+
+    # now process the add-on and publish it
+    helper = ReviewHelper(addon=upload.addon, version=latest_version)
+    helper.handler.data = {'comments': ''}
+    helper.handler.process_public()
 
 
 @pytest.fixture
