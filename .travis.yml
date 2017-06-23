@@ -25,6 +25,7 @@ addons:
     packages:
       - swig
   firefox: latest
+  sauce_connect: true
 
 before_install:
   - scripts/travis_es.sh
