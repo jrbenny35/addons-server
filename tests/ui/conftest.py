@@ -55,12 +55,12 @@ def capabilities(capabilities):
     capabilities['acceptInsecureCerts'] = True
 
     if os.getenv('TOXENV') == 'mobile-ui-tests':
-        capabilities['browserName'] = 'Safari'
+        capabilities['browserName'] = 'Chrome'
         capabilities['appiumVersion'] = '1.6.4'
-        capabilities['deviceName'] = 'iPhone 7 Simulator'
+        capabilities['deviceName'] = 'Android Emulator'
         capabilities['deviceOrientation'] = 'portrait'
-        capabilities['platformVersion'] = '10.3'
-        capabilities['platformName'] = 'iOS'
+        capabilities['platformVersion'] = '6.0'
+        capabilities['platformName'] = 'Android'
 
     return capabilities
 
