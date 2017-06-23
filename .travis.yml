@@ -27,7 +27,7 @@ addons:
   firefox: latest
   sauce_connect: true
   hosts:
-    - olympia.dev
+    - localhost
 
 before_install:
   - scripts/travis_es.sh
