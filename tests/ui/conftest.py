@@ -43,7 +43,7 @@ def my_base_url(base_url, request, pytestconfig):
         return base_url
     elif 'mobile-ui-tests' in os.getenv('TOXENV'):
         url = urlparse.urlsplit(request.getfixturevalue("live_server").url)
-        return request.getfixturevalue("live_server").url
+        return 'olympia.local:{0}'.format(url.port)
     else:
         return request.getfixturevalue("live_server").url
 
