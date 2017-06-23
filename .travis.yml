@@ -26,6 +26,8 @@ addons:
       - swig
   firefox: latest
   sauce_connect: true
+  hosts:
+    - olympia.dev
 
 before_install:
   - scripts/travis_es.sh
