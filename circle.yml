@@ -16,11 +16,12 @@ jobs:
       - run: echo "Docker deploy here."
   integration_test:
     machine: true
-      environment:
-        DISPLAY: :99
-        PATH: "/home/ubuntu/addons-server/firefox:$PATH"
     steps:
       - checkout
+      - run:
+          environment:
+            DISPLAY: :99
+            PATH: "/home/ubuntu/addons-server/firefox:$PATH"
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
           name: Creating Artifacts
