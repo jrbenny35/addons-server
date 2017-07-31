@@ -30,7 +30,7 @@ jobs:
       - run: pip install tox
       - run: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
       - store_artifacts:
-          path: /tmp/ui-test.html
+          path: /tmp/artifacts/ui-test.html
           destination: ui-test.html
 workflows:
   version: 2
