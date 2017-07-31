@@ -29,7 +29,9 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run: pip install tox
-      - run: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
+      - run:
+          name: Run tests
+          command: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
           environment:
             DISPLAY: :99
             PATH: "/home/ubuntu/addons-server/firefox:$PATH"
