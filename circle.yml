@@ -22,6 +22,11 @@ jobs:
       - run:
           name: Creating Artifacts
           command: mkdir /tmp/artifacts
+      - run:
+          command: |
+              curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+              echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      - run: sudo apt-get update && sudo apt-get install yarn
       - run: pip install tox
       - run: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
       - store_artifacts:
