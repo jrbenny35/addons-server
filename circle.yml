@@ -22,6 +22,7 @@ jobs:
       - run:
           name: Creating Artifacts
           command: mkdir /tmp/artifacts
+      - run: pip install tox
       - run: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
       - store_artifacts:
           path: /tmp/ui-test.html
