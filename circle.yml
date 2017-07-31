@@ -1,6 +1,7 @@
 version: 2
 jobs:
   build:
+    machine: true
     working_directory: ~/addons-server
     steps:
       - checkout
@@ -14,6 +15,7 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
+    machine: true
     steps:
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
