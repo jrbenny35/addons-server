@@ -1,38 +1,32 @@
-machine:
-  services:
-    - docker
-  hosts:
-    olympia.dev: 127.0.0.1
-
-dependencies:
-  override:
-    - docker version
-    - >
-        printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n'
-        "$CIRCLE_SHA1"
-        "$CIRCLE_TAG"
-        "$CIRCLE_PROJECT_USERNAME"
-        "$CIRCLE_PROJECT_REPONAME"
-        "$CIRCLE_BUILD_URL"
-        > version.json
-    - docker build -t app:build -f Dockerfile.deploy .
-
-test:
-  override:
-    - echo "UI Tests are run on Travis CI. https://travis-ci.org/mozilla/addons-server/"
-
-deployment:
-  latest:
-    branch: master
-    commands:
-      - docker tag app:build ${DOCKERHUB_REPO}:latest
-      - docker login -e $DOCKERHUB_EMAIL -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      - docker push ${DOCKERHUB_REPO}:latest
-
-  releases:
-    # push all tags
-    tag: /.*/
-    commands:
-      - docker tag app:build ${DOCKERHUB_REPO}:${CIRCLE_TAG}
-      - docker login -e $DOCKERHUB_EMAIL -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      - docker push ${DOCKERHUB_REPO}:${CIRCLE_TAG}
+version: 2
+jobs:
+  build:
+    working_directory: ~/addons-server
+    steps:
+      - checkout
+      - run: >
+          printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n'
+          "$CIRCLE_SHA1"
+          "$CIRCLE_TAG"
+          "$CIRCLE_PROJECT_USERNAME"
+          "$CIRCLE_PROJECT_REPONAME"
+          "$CIRCLE_BUILD_URL"
+          > version.json
+      - run: echo "Docker deploy here."
+  integration_test:
+    steps:
+      - checkout
+      - run: git clone https://github.com/mozilla/addons-frontend.git
+      - run:
+          name: Creating Artifacts
+            command: mkdir /tmp/artifacts;
+      - run: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
+      - store_artifacts:
+          path: /tmp/ui-test.html
+          destination: ui-test.html
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - integration_test
