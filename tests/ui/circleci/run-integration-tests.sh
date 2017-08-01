@@ -1,6 +1,6 @@
 #!/bin/bash
 
 cd addons-frontend
-yarn install
+yarn
 yarn amo &
 STATIC_SERVER_PID=$!
