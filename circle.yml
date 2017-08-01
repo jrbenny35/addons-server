@@ -3,6 +3,8 @@ machine:
     - docker
   hosts:
     olympia.dev: 127.0.0.1
+  node:
+    version: 6.9.1
   environment:
     DISPLAY: :99
     PATH: "/home/ubuntu/testpilot/firefox:$PATH"
