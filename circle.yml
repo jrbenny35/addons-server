@@ -33,5 +33,8 @@ test:
     - sudo apt-get update && sudo apt-get install yarn
     - ./tests/ui/circleci/install-test-depenencies.sh
     - pip install tox
+    - mkdir test-results
   override:
-    - tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
+    - tox -e ui-tests-1 -- --html=test-results/ui-test.html
+  post:
+    - cp -r test-results $CIRCLE_ARTIFACTS
