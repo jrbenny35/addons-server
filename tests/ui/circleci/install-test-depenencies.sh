@@ -6,7 +6,7 @@ GECKODRIVER_URL=$(
   python -c "import sys, json; r = json.load(sys.stdin); print([a for a in r['assets'] if 'linux64' in a['name']][0]['browser_download_url']);"
 );
 
-curl -L -O geckodriver.tar.gz $GECKODRIVER_URL
+wget -O geckodriver.tar.gz $GECKODRIVER_URL
 gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
 sudo mv geckodriver /home/ubuntu/bin
