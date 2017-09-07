@@ -2,8 +2,8 @@ import datetime
 import json
 import os
 import random
-import string
 import urlparse
+from subprocess import call
 
 import jwt
 import pytest
@@ -31,33 +31,50 @@ from olympia.landfill.collection import generate_collection
 from olympia.landfill.generators import generate_themes
 from olympia.reviews.models import Review
 from olympia.users.models import UserProfile
+from pytest_django import live_server_helper
+
+# TODO: Change imports to allow running tests against deployed instances.
 
 
-@pytest.fixture(scope='function')
-def my_base_url(base_url, request, pytestconfig, variables):
-    pytestconfig.option.usingliveserver = False
+@pytest.fixture(scope='session')
+def my_base_url(base_url, request, pytestconfig):
+    """Base URL used to start the 'live_server'."""
+    if base_url:
+        pytestconfig.option.usingliveserver = False
+        return base_url
+    else:
+        return request.getfixturevalue("live_server").url
 
-    with open('tests/ui/variables.json') as fobj:
-        variables.update(json.load(fobj))
 
-    return base_url
+@pytest.fixture(scope='session')
+def initial_data(base_url, jwt_token):
+    """Fixture used to fill database will dummy addons.
+
+    Creates exactly 10 random addons with users that are also randomly
+    generated.
+    """
+    headers = {'Authorization': 'JWT {token}'.format(token=jwt_token)}
+
+    url = '{base_url}/api/v3/landfill/generate-addons/'.format(
+        base_url=base_url)
+
+    response = requests.post(
+        url,
+        data={'count': 10},
+        headers=headers)
+
+    # assert requests.codes.created == response.status_code, response.json()
+    requests.get(base_url)
+    call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
+    print(call({'echo $MEMCACHE_LOCATION'}, shell=True))
+    print("Memcache cleared")
 
 
 @pytest.fixture
 def capabilities(capabilities):
     # In order to run these tests in Firefox 48, marionette is required
     capabilities['marionette'] = True
-    capabilities['acceptInsecureCerts'] = True
     return capabilities
-
-
-@pytest.fixture
-def firefox_options(firefox_options):
-    firefox_options.set_preference(
-        'extensions.install.requireBuiltInCerts', False)
-    firefox_options.set_preference('xpinstall.signatures.required', False)
-    firefox_options.set_preference('extensions.webapi.testing', True)
-    return firefox_options
 
 
 @pytest.fixture
@@ -67,70 +84,44 @@ def fxa_account(my_base_url):
     return FxATestAccount(url)
 
 
-@pytest.fixture
-def jwt_issuer(my_base_url, variables):
+@pytest.fixture(scope='session')
+def jwt_issuer(base_url, variables):
     """JWT Issuer from variables file or env variable named 'JWT_ISSUER'"""
     try:
-        hostname = urlparse.urlsplit(my_base_url).hostname
+        hostname = urlparse.urlsplit(base_url).hostname
         return variables['api'][hostname]['jwt_issuer']
     except KeyError:
         return os.getenv('JWT_ISSUER')
 
 
-@pytest.fixture
-def jwt_secret(my_base_url, variables):
+@pytest.fixture(scope='session')
+def jwt_secret(base_url, variables):
     """JWT Secret from variables file or env vatiable named "JWT_SECRET"""
     try:
-        hostname = urlparse.urlsplit(my_base_url).hostname
+        hostname = urlparse.urlsplit(base_url).hostname
         return variables['api'][hostname]['jwt_secret']
     except KeyError:
         return os.getenv('JWT_SECRET')
 
 
 @pytest.fixture
-def initial_data(my_base_url, jwt_token):
+def initial_data_(transactional_db, pytestconfig):
     """Fixture used to fill database will dummy addons.
-
     Creates exactly 10 random addons with users that are also randomly
     generated.
     """
-    headers = {'Authorization': 'JWT {token}'.format(token=jwt_token)}
+    if not pytestconfig.option.usingliveserver:
+        return
 
-    response = requests.post(
-        '{base}/api/v3/landfill/dump-current-state/'.format(base=my_base_url),
-        headers=headers)
-
-    assert requests.codes.ok == response.status_code, response.content
-
-    original_database_state = response.json()['state']
-
-    url = '{base_url}/api/v3/landfill/generate-addons/'.format(
-        base_url=my_base_url)
-
-    response = requests.post(
-        url,
-        data={'count': 10},
-        headers=headers)
-
-    assert requests.codes.created == response.status_code, response.json()
-
-    yield
-
-    response = requests.post(
-        '{base}/api/v3/landfill/restore-current-state/'.format(base=my_base_url),
-        data={'state': original_database_state},
-        headers=headers)
-
-    assert requests.codes.ok == response.status_code, response.json()
+    for _ in range(10):
+        AddonUser.objects.create(user=user_factory(), addon=addon_factory())
 
 
 @pytest.fixture
-def theme(create_superuser, pytestconfig):
+def theme(transactional_db, create_superuser, pytestconfig):
     """Creates a custom theme named 'Ui-Test Theme'.
-
     This theme will be a featured theme and will belong to the user created by
     the 'create_superuser' fixture.
-
     It has one author.
     """
     if not pytestconfig.option.usingliveserver:
@@ -170,20 +161,11 @@ def theme(create_superuser, pytestconfig):
 
 
 @pytest.fixture
-def selenium(selenium):
-    selenium.implicitly_wait(10)
-    selenium.maximize_window()
-    return selenium
-
-
-@pytest.fixture
-def addon(create_superuser, pytestconfig):
+def addon(transactional_db, create_superuser, pytestconfig):
     """Creates a custom addon named 'Ui-Addon'.
-
     This addon will be a featured addon and will have a featured collecton
     attatched to it. It will belong to the user created by the
     'create_superuser' fixture.
-
     It has 1 preview, 5 reviews, and 2 authors. The second author is named
     'ui-tester2'. It has a version number as well as a beta version.
     """
@@ -199,10 +181,11 @@ def addon(create_superuser, pytestconfig):
         average_rating=5,
         description=u'My Addon description',
         file_kw={
+            'hash': 'fakehash',
             'platform': amo.PLATFORM_ALL.id,
             'size': 42,
         },
-        guid='test-desktop@nowhere',
+        guid=generate_addon_guid(),
         homepage=u'https://www.example.org/',
         icon_type=random.choice(default_icons),
         name=u'Ui-Addon',
@@ -235,11 +218,9 @@ def addon(create_superuser, pytestconfig):
 
 
 @pytest.fixture
-def minimal_addon(create_superuser, pytestconfig):
+def minimal_addon(transactional_db, create_superuser, pytestconfig):
     """Creates a custom addon named 'Ui-Addon-2'.
-
     It will belong to the user created by the 'create_superuser' fixture.
-
     It has 1 preview, and 2 reviews.
     """
     if not pytestconfig.option.usingliveserver:
@@ -282,9 +263,8 @@ def minimal_addon(create_superuser, pytestconfig):
 
 
 @pytest.fixture
-def themes(create_superuser, pytestconfig):
+def themes(transactional_db, create_superuser, pytestconfig):
     """Creates exactly 6 themes that will be not featured.
-
     These belong to the user created by the 'create_superuser' fixture.
     It will also create 6 themes that are featured with random authors.
     """
@@ -299,9 +279,8 @@ def themes(create_superuser, pytestconfig):
 
 
 @pytest.fixture
-def collections(pytestconfig):
+def collections(transactional_db, pytestconfig):
     """Creates exactly 4 collections that are featured.
-
     This fixture uses the generate_collection function from olympia.
     """
     if not pytestconfig.option.usingliveserver:
@@ -314,107 +293,10 @@ def collections(pytestconfig):
 
 
 @pytest.fixture
-def gen_webext(create_superuser, pytestconfig, tmpdir):
-    """Creates a a blank webextenxtension."""
-    if not pytestconfig.option.usingliveserver:
-        return
-
-    from olympia.files.models import File, FileUpload
-    from olympia.versions.models import Version
-    from olympia.amo.tests.test_helpers import get_addon_file
-    from django.utils.translation import activate
-    import os
-
-    manifest = tmpdir.mkdir('webext').join('manifest.json')
-    # print(manifest)
-    webext = {
-        'applications': {
-            'gecko': {
-                'id': 'ui-addon@mozilla.org',
-            }
-        },
-        'manifest_version': 2,
-        'name': 'Ui-Addon',
-        'version': 3.1,
-        'description': 'Blank Webextension for testing',
-        'permissions': [],
-        'background': {
-            'scripts': 'background.js',
-        }
-    }
-    activate('en')
-    # manifest.write(json.dump(webext, manifest, indent=2))
-    # json.dump(webext, manifest, indent=2)
-    with open(str(manifest), 'w') as outfile:
-        json.dump(webext, outfile, indent=2)
-    default_icons = [x[0] for x in icons() if x[0].startswith('icon/')]
-    addon = addon_factory(
-        status=STATUS_PUBLIC,
-        type=ADDON_EXTENSION,
-        average_daily_users=5567,
-        users=[UserProfile.objects.get(username='uitest')],
-        average_rating=5,
-        description=u'My Addon description',
-        file_kw={
-            'hash': 'fakehash',
-            'platform': amo.PLATFORM_ALL.id,
-            'size': 42,
-        },
-        guid='firebug@software.joehewitt.com',
-        homepage=u'https://www.example.org/',
-        icon_type=random.choice(default_icons),
-        name=u'Ui-Addon',
-        public_stats=True,
-        slug='ui-test',
-        summary=u'My Addon summary',
-        support_email=u'support@example.org',
-        support_url=u'https://support.example.org/support/ui-test-addon/',
-        tags=['some_tag', 'another_tag', 'ui-testing',
-              'selenium', 'python'],
-        total_reviews=888,
-        weekly_downloads=2147483647,
-        developer_comments='This is a testing addon, used within pytest.',
-    )
-    Preview.objects.create(addon=addon, position=1)
-    version = version_factory(addon=addon, file_kw={'status': amo.STATUS_BETA},
-                    version='1.1beta')
-    addon.reload()
-    # zip as .xpi
-    # os.system('zip -r {0} {1}'.format(tmpdir.join('webext_comp.xpi'), manifest))
-    # return tmpdir.join('webext_comp.xpi').open()
-    # print(tmpdir.listdir())
-    # with open(str(tmpdir.join('webext_comp.xpi')), 'r') as outfile:
-    Version.from_upload(upload=upload, addon=addon, platforms=[amo.PLATFORM_ALL.id], channel=amo.RELEASE_CHANNEL_LISTED)
-    addon.save()
-
-
-# @pytest.fixture
-# def gen_webext2(addon):
-#     import django
-
-#     from olympia.files.models import File, FileUpload
-#     from olympia.versions.models import Version
-#     from olympia.amo.tests.test_helpers import get_addon_file
-#     from django.utils.translation import activate
-#     from olympia.files.tests.test_helpers import get_file
-
-#     activate('en')
-
-#     f = File()
-#     upload = FileUpload.objects.create(path=get_file('webextension_no_id.xpi'), hash=f.generate_hash(get_file('webextension_no_id.xpi')))
-#     # upload = FileUpload.objects.create(path=tmpdir.join('webext_comp.xpi'))
-#     Version.from_upload(upload=upload, addon=addon, platforms=[amo.PLATFORM_ALL.id], channel=amo.RELEASE_CHANNEL_LISTED)
-
-
-@pytest.fixture
-def create_superuser(my_base_url, tmpdir, variables):
+def create_superuser(my_base_url, transactional_db, tmpdir, variables):
     """Creates a superuser."""
-    if not pytestconfig.option.usingliveserver:
-        return
-
     create_switch('super-create-accounts')
     call_command('loaddata', 'initial.json')
-
     call_command(
         'createsuperuser',
         interactive=False,
@@ -426,28 +308,61 @@ def create_superuser(my_base_url, tmpdir, variables):
     )
     with tmpdir.join('variables.json').open() as f:
         variables.update(json.load(f))
-
+    print(variables)
 
 @pytest.fixture
-def user(my_base_url, fxa_account, jwt_token):
+def user(create_superuser, my_base_url, fxa_account, jwt_token):
     """This creates a user for logging into the AMO site."""
     url = '{base_url}/api/v3/accounts/super-create/'.format(
         base_url=my_base_url)
-    print('xxxxxxxxx', url)
+
     params = {
         'email': fxa_account.email,
         'password': fxa_account.password,
         'username': fxa_account.email.split('@')[0]}
     headers = {'Authorization': 'JWT {token}'.format(token=jwt_token)}
     response = requests.post(url, data=params, headers=headers)
-    print('XXXXXXXXXXXXXXXXXXXXXXX', response.json())
     assert requests.codes.created == response.status_code
     params.update(response.json())
     return params
 
 
-@pytest.fixture
-def jwt_token(my_base_url, jwt_issuer, jwt_secret):
+@pytest.fixture(scope='function')
+def live_server(request, transactional_db, pytestconfig):
+    """This fixture overrides the live_server fixture provided by pytest_django.
+    live_server allows us to create a running version of the
+    addons django application within pytest for testing.
+    cgrebs:
+    From what I found out was that the `live_server` fixture (in our setup,
+    couldn't reproduce in a fresh project) apparently starts up the
+    LiveServerThread way too early before pytest-django configures the
+    settings correctly.
+    That resulted in the LiveServerThread querying the 'default' database
+    which was different from what the other fixtures and tests were using
+    which resulted in the problem that the just created api keys could not
+    be found in the api methods in the live-server.
+    I worked around that by implementing the live_server fixture ourselfs
+    and make it function-scoped so that it now runs in a proper
+    database-transaction.
+    This is a HACK and I'll work on a more permanent solution but for now
+    it should be enough to continue working on porting tests...
+    Also investigating if there are any problems in pytest-django directly.
+    """
+
+    addr = (request.config.getvalue('liveserver') or
+            os.getenv('DJANGO_LIVE_TEST_SERVER_ADDRESS'))
+
+    if not addr:
+        addr = 'localhost:8081,8100-8200'
+
+    server = live_server_helper.LiveServer(addr)
+    pytestconfig.option.usingliveserver = True
+    yield server
+    server.stop()
+
+
+@pytest.fixture(scope='session')
+def jwt_token(jwt_issuer, jwt_secret):
     """This creates a JWT Token"""
     payload = {
         'iss': jwt_issuer,

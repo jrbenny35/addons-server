@@ -1,11 +1,21 @@
+from subprocess import call
+
 import pytest
 
 from pages.desktop.home import Home
 
 
+@pytest.fixture(autouse=True)
+def refresh_cache(selenium, my_base_url):
+    Home(selenium, my_base_url).open()
+    call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
+    # Home(selenium, my_base_url).open()
+    # call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
+
+
 @pytest.mark.nondestructive
 def test_there_are_ten_most_popular_extensions(
-        my_base_url, selenium, initial_data):
+        my_base_url, selenium):
     """Ten most popular add-ons are listed"""
     page = Home(selenium, my_base_url).open()
     assert len(page.most_popular.extensions) == 10
@@ -13,7 +23,7 @@ def test_there_are_ten_most_popular_extensions(
 
 @pytest.mark.nondestructive
 def test_most_popular_extensions_are_sorted_by_users(
-        my_base_url, selenium, initial_data):
+        my_base_url, selenium):
     """Most popular add-ons are sorted by popularity"""
     page = Home(selenium, my_base_url).open()
     extensions_page = page.most_popular.extensions
@@ -25,7 +35,7 @@ def test_most_popular_extensions_are_sorted_by_users(
 @pytest.mark.smoke
 @pytest.mark.nondestructive
 def test_that_clicking_on_addon_name_loads_details_page(
-        my_base_url, selenium, addon):
+        my_base_url, selenium):
     """Details page addon name matches clicked addon"""
     page = Home(selenium, my_base_url).open()
     name = page.featured_extensions.extensions[0].name
@@ -36,7 +46,7 @@ def test_that_clicking_on_addon_name_loads_details_page(
 @pytest.mark.smoke
 @pytest.mark.nondestructive
 def test_that_featured_themes_exist_on_the_home(
-        my_base_url, selenium, themes):
+        my_base_url, selenium):
     """Featured themes are displayed"""
     page = Home(selenium, my_base_url).open()
     assert len(page.featured_themes.themes) == 6
@@ -44,7 +54,7 @@ def test_that_featured_themes_exist_on_the_home(
 
 @pytest.mark.nondestructive
 def test_that_clicking_see_all_themes_link_works(
-        my_base_url, selenium, theme, themes):
+        my_base_url, selenium):
     """Amount of featured themes matches on both pages"""
     page = Home(selenium, my_base_url).open()
     themes = page.featured_themes.themes
@@ -54,7 +64,7 @@ def test_that_clicking_see_all_themes_link_works(
 
 @pytest.mark.nondestructive
 def test_that_featured_extensions_exist_on_the_home(
-        my_base_url, selenium, addon):
+        my_base_url, selenium):
     """Featured extensions exist on home page"""
     page = Home(selenium, my_base_url).open()
     assert len(page.featured_extensions.extensions) >= 1
@@ -62,7 +72,7 @@ def test_that_featured_extensions_exist_on_the_home(
 
 @pytest.mark.nondestructive
 def test_that_clicking_see_all_collections_link_works(
-        my_base_url, selenium, collections):
+        my_base_url, selenium):
     """Amount of featured themes matches on both pages"""
     page = Home(selenium, my_base_url).open()
     collections = page.featured_collections.collections

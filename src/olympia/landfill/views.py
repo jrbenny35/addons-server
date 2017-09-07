@@ -30,9 +30,22 @@ class GenerateAddons(APIView):
         if not serializer.is_valid():
             return Response({'errors': serializer.errors}, status=422)
 
-        serializer.create()
+        for _ in range(11):
+            serializer.create_addons()
+            cache.clear()
+        serializer.create_addon()
+        serializer.create_theme()
+        cache.clear()
+        serializer.create_collections()
+        cache.clear()
+        serializer.create_themes()
 
         cache.clear()
+        databases = TransactionTestCase._databases_names(include_mirrors=False)
+        for db_name in databases:
+            call_command('reindex', database=db_name, force=True, interactive=False)
+            call_command('cron', 'category_totals', database=db_name)
+            call_command('update_permissions_from_mc', database=db_name)
 
         return Response({}, status=201)
 
@@ -89,8 +102,8 @@ class RestoreCurrentState(APIView):
                          allow_cascade=False,
                          inhibit_post_migrate=False)
 
-        print('Restore...')
+        # print('Restore...')
         # Restore database to previously known state
-        connection.creation.deserialize_db_from_string(data)
+        # connection.creation.deserialize_db_from_string(data)
 
         return Response({}, status=200)
