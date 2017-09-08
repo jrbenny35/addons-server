@@ -5,10 +5,11 @@ import pytest
 from pages.desktop.home import Home
 
 
-@pytest.fixture(autouse=True)
-def refresh_cache(selenium, my_base_url):
-    Home(selenium, my_base_url).open()
-    call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
+# @pytest.fixture(autouse=True)
+# def refresh_cache():#
+#    call({'python manage.py clear_cache'}, shell=True)
+    # Home(selenium, my_base_url).open()
+    # call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
     # Home(selenium, my_base_url).open()
     # call({'echo flush_all > $MEMCACHE_LOCATION'}, shell=True)
 

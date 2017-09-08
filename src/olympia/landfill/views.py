@@ -46,6 +46,7 @@ class GenerateAddons(APIView):
             call_command('reindex', database=db_name, force=True, interactive=False)
             call_command('cron', 'category_totals', database=db_name)
             call_command('update_permissions_from_mc', database=db_name)
+            call_command('clear_cache', database=db_name)
 
         return Response({}, status=201)
 
