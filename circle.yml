@@ -19,6 +19,7 @@ jobs:
       - image: ubuntu:16.04
     working_directory: ~/addons-server
     steps:
+      - run: sudo apt-get update && sudo apt-get install curl
       - run:
           name: Install Docker Compose
           command: |
@@ -28,7 +29,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Install git
-          command: sudo apt-get update && sudo apt-get install git
+          command: sudo apt-get install git
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
