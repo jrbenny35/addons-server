@@ -19,6 +19,16 @@ jobs:
       - image: ubuntu:16.04
     working_directory: ~/addons-server
     steps:
+      - run:
+          name: Install Docker Compose
+          command: |
+            set -x
+            curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+      - setup_remote_docker
+      - run:
+          name: Install git
+          command: sudo apt-get update && sudo apt-get install git
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
@@ -30,6 +40,11 @@ jobs:
               echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
       - run: sudo apt-get update && sudo apt-get install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
+      - run:
+          name: Start Containers
+          command: |
+            set -x
+            docker-compose up -d
       - run:
           name: Run tests
           command: |
