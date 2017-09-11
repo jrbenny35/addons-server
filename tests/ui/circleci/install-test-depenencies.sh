@@ -15,4 +15,4 @@ geckodriver --version
 pip install tox mozdownload mozinstall
 
 sudo mkdir -p /home/ubuntu/firefox-downloads/
-mozdownload --version latest --type daily --destination /home/ubuntu/firefox-downloads/firefox_nightly/
+sudo mozdownload --version latest --type daily --destination /home/ubuntu/firefox-downloads/firefox_nightly/
