@@ -15,11 +15,10 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    docker:
-      - image: ubuntu:16.04
+    machine: True
     working_directory: ~/addons-server
     steps:
-      - run: sudo apt-get update && sudo apt-get install curl
+      - checkout
       - run:
           name: Install Docker Compose
           command: |
@@ -27,10 +26,6 @@ jobs:
             curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
       - setup_remote_docker
-      - run:
-          name: Install git
-          command: sudo apt-get install git
-      - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
           name: Creating Artifacts
