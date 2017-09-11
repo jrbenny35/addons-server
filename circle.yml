@@ -18,13 +18,18 @@ jobs:
     machine: True
     working_directory: ~/addons-server
     steps:
-      - checkout
+      - run: apt-get update && apt-get install curl
       - run:
           name: Install Docker Compose
           command: |
             set -x
             curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
+      - setup_remote_docker
+      - run:
+          name: Install git
+          command: apt-get install git
+      - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
           name: Creating Artifacts
