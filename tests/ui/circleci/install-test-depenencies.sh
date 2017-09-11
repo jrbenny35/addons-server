@@ -16,3 +16,4 @@ pip install tox mozdownload mozinstall
 
 mozdownload --version latest --type daily --destination firefox
 mozinstall $(ls -t firefox/*tar.bz2)
+export PATH=firefox/firefox:$PATH
