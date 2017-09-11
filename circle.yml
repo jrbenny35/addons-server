@@ -15,7 +15,8 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    machine: True
+    docker:
+      - image: ubuntu:16.04
     working_directory: ~/addons-server
     steps:
       - run: apt-get update && apt-get install curl
