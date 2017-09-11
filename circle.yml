@@ -33,7 +33,7 @@ jobs:
           command: |
             export DISPLAY=:99
             pip install tox
-            tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
+            tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test-1.html
       - store_artifacts:
           path: /tmp/artifacts/ui-test.html
           destination: ui-test.html
