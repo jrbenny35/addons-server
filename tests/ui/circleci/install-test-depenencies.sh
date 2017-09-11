@@ -9,7 +9,7 @@ GECKODRIVER_URL=$(
 wget -O geckodriver.tar.gz $GECKODRIVER_URL
 gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
-sudo mv geckodriver /home/ubuntu/bin
+sudo mv geckodriver /bin
 geckodriver --version
 
 pip install tox mozdownload mozinstall
