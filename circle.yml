@@ -16,6 +16,9 @@ jobs:
       - run: echo "Docker deploy here."
   integration_test:
     machine: true
+      environment:
+        DISPLAY: :99
+        PATH: "home/circleci/project/firefox/firefox:$PATH"
     steps:
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
@@ -33,9 +36,6 @@ jobs:
           command: |
                 pip install tox
                 tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
-          environment:
-            DISPLAY: :99
-            PATH: "home/circleci/project/firefox/firefox:$PATH"
       - store_artifacts:
           path: /tmp/artifacts/ui-test.html
           destination: ui-test.html
