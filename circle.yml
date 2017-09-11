@@ -16,9 +16,9 @@ jobs:
       - run: echo "Docker deploy here."
   integration_test:
     machine: true
-      environment:
-        DISPLAY: :99
-        PATH: "home/circleci/project/firefox/firefox:$PATH"
+    environment:
+      DISPLAY: :99
+      PATH: "home/circleci/project/firefox/firefox:$PATH"
     steps:
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
