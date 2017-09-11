@@ -37,10 +37,10 @@ jobs:
           command: mkdir /tmp/artifacts
       - run:
           command: |
+              apt-get --assume-yes apt-transport-https
               curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
               echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
               apt-get --assume-yes update
-              apt-get --assume-yes apt-transport-https
               apt-get --assume-yes install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run:
