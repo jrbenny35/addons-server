@@ -6,7 +6,7 @@ gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
 mv geckodriver /bin
 geckodriver --version
-apt-get install python3-pip
+apt-get --assume-yes install python3-pip
 
 pip3 install tox mozdownload mozinstall
 
