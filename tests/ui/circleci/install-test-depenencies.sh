@@ -4,7 +4,7 @@ set -ex
 wget -O geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.17.0/geckodriver-v0.17.0-linux64.tar.gz
 gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
-sudo mv geckodriver /bin
+mv geckodriver /bin
 geckodriver --version
 
 pip install tox mozdownload mozinstall
