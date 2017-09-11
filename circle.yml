@@ -1,40 +1,46 @@
-machine:
-  services:
-    - docker
-  hosts:
-    olympia.dev: 127.0.0.1
-  node:
-    version: 6.9.1
-  environment:
-    DISPLAY: :99
-    PATH: "/home/ubuntu/testpilot/firefox:$PATH"
-  post:
-    - pyenv global 2.7.12 3.6.1
-
-dependencies:
-  override:
-    - docker version
-    - >
-        printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n'
-        "$CIRCLE_SHA1"
-        "$CIRCLE_TAG"
-        "$CIRCLE_PROJECT_USERNAME"
-        "$CIRCLE_PROJECT_REPONAME"
-        "$CIRCLE_BUILD_URL"
-        > version.json
-    - echo "Docker Deploy here"
-
-test:
-  pre:
-    - git clone https://github.com/mozilla/addons-frontend.git
-    - |
-      curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-      echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-    - sudo apt-get update && sudo apt-get install yarn
-    - ./tests/ui/circleci/install-test-depenencies.sh
-    - pip install tox
-    - mkdir test-results
-  override:
-    - tox -e ui-tests-1 -- --html=test-results/ui-test.html
-  post:
-    - cp -r test-results $CIRCLE_ARTIFACTS
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/addons-server
+    steps:
+      - checkout
+      - run: >
+          printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n'
+          "$CIRCLE_SHA1"
+          "$CIRCLE_TAG"
+          "$CIRCLE_PROJECT_USERNAME"
+          "$CIRCLE_PROJECT_REPONAME"
+          "$CIRCLE_BUILD_URL"
+          > version.json
+      - run: echo "Docker deploy here."
+  integration_test:
+    machine: true
+    steps:
+      - checkout
+      - run: git clone https://github.com/mozilla/addons-frontend.git
+      - run:
+          name: Creating Artifacts
+          command: mkdir /tmp/artifacts
+      - run:
+          command: |
+              curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+              echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      - run: sudo apt-get update && sudo apt-get install yarn
+      - run: ./tests/ui/circleci/install-test-depenencies.sh
+      - run: pip install tox
+      - run:
+          name: Run tests
+          command: tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test.html
+          environment:
+            DISPLAY: :99
+            PATH: "/home/ubuntu/addons-server/firefox:$PATH"
+      - store_artifacts:
+          path: /tmp/artifacts/ui-test.html
+          destination: ui-test.html
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - integration_test
