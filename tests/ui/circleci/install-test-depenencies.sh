@@ -6,11 +6,6 @@ gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
 mv geckodriver /bin
 geckodriver --version
-apt-get --assume-yes install software-properties-common python-software-properties
-add-apt-repository -y ppa:deadsnakes/ppa
-apt-get --assume-yes update
-apt-get --assume-yes install python2.7
-python2.7 get-pip.py
 
 pip install tox mozdownload mozinstall
 
