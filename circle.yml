@@ -18,7 +18,6 @@ jobs:
     machine: true
     working_directory: ~/addons-server
     steps:
-      - run: apt-get --assume-yes update && apt-get -y --no-install-recommends install curl wget ca-certificates
       - run:
           name: Install Docker Compose
           command: pip install docker-compose
@@ -29,11 +28,9 @@ jobs:
           command: mkdir /tmp/artifacts
       - run:
           command: |
-              apt-get --assume-yes install apt-transport-https
               curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
               echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-              apt-get --assume-yes update
-              apt-get --assume-yes install yarn
+              sudo apt-get --assume-yes install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run:
           name: Start Containers
