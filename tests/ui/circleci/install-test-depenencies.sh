@@ -7,7 +7,7 @@ chmod +x geckodriver
 mv geckodriver /bin
 geckodriver --version
 apt-get --assume-yes install software-properties-common python-software-properties
-add-apt-repository ppa:deadsnakes/ppa
+add-apt-repository -y ppa:deadsnakes/ppa
 apt-get --assume-yes update
 apt-get --assume-yes install python2.7
 
