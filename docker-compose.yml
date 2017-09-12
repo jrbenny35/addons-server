@@ -71,4 +71,4 @@ services:
       - "5900"
     shm_size: 2g
     links:
-- "web:olympia.dev"
+     - "web:olympia.dev"
