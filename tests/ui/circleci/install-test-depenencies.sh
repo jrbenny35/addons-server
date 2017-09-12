@@ -6,9 +6,11 @@ gunzip -c geckodriver.tar.gz | tar xopf -
 chmod +x geckodriver
 mv geckodriver /bin
 geckodriver --version
-apt-get --assume-yes install python3-pip
+add-apt-repository ppa:fkrull/deadsnakes
+apt-get --assume-yes update
+apt-get --assume-yes install python2.7
 
-pip3 install tox mozdownload mozinstall
+pip install tox mozdownload mozinstall
 
 mozdownload --version latest --type daily --destination firefox
 mozinstall $(ls -t firefox/*tar.bz2)
