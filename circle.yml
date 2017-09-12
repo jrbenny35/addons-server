@@ -40,7 +40,8 @@ jobs:
             docker-compose up -d
             echo 127.0.0.1 olympia.dev | sudo tee -a /etc/hosts
             export DISPLAY=:99
-            pip install tox
+            make shell && \
+            pip install tox && \
             tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test-1.html
       - store_artifacts:
           path: /tmp/artifacts/ui-test.html
