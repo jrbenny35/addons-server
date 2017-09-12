@@ -34,13 +34,10 @@ jobs:
               sudo apt-get --assume-yes install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run:
-          name: Start Containers
+          name: Start Containers and run test
           command: |
             set -x
             docker-compose up -d
-      - run:
-          name: Run tests
-          command: |
             echo 127.0.0.1 olympia.dev | sudo tee -a /etc/hosts
             export DISPLAY=:99
             pip install tox
