@@ -47,6 +47,7 @@ jobs:
           name: Start Containers
           command: |
             set -x
+            docker-compose pull
             docker-compose up -d
       - run:
           name: Run tests
