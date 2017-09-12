@@ -15,21 +15,13 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    docker:
-      - image: python:2.7.13-jessie
+    machine: true
     working_directory: ~/addons-server
     steps:
       - run: apt-get --assume-yes update && apt-get -y --no-install-recommends install curl wget ca-certificates
       - run:
           name: Install Docker Compose
-          command: |
-            set -x
-            curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-            chmod +x /usr/local/bin/docker-compose
-      - setup_remote_docker
-      - run:
-          name: Install git
-          command: apt-get --assume-yes install git
+          command: pip install docker-compose
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
@@ -47,7 +39,6 @@ jobs:
           name: Start Containers
           command: |
             set -x
-            docker-compose pull
             docker-compose up -d
       - run:
           name: Run tests
