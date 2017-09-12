@@ -10,6 +10,7 @@ apt-get --assume-yes install software-properties-common python-software-properti
 add-apt-repository -y ppa:deadsnakes/ppa
 apt-get --assume-yes update
 apt-get --assume-yes install python2.7
+python get-pip.py
 
 pip install tox mozdownload mozinstall
 
