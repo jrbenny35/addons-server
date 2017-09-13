@@ -32,6 +32,12 @@ jobs:
           command: |
             set -x
             docker-compose up -d
+
+            # Try and wait for the container to get ready
+            docker run --network container:web \
+              appropriate/curl --retry 10 --retry-delay 1 --retry-connrefused http://localhost:8000/
+
+            # Run ui-tests
             ./scripts/ui-test.sh
 workflows:
   version: 2
