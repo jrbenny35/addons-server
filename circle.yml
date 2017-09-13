@@ -29,7 +29,7 @@ jobs:
           command: |
             set -x
             docker-compose up -d
-            docker-compose run web bash /code/scripts/setup-docker.sh
+            docker-compose exec web bash /code/scripts/setup-docker.sh
 
             # Try and wait for the container to get ready
             docker run --network container:addonsserver_web_1 \
