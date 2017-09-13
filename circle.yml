@@ -15,14 +15,16 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
+    machine: docker
     steps:
+      - checkout
+      - setup_remote_docker
       - run:
         name: Install Docker Compose
         command: |
           set -x
           curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-      - setup_remote_docker
       - run:
           name: Start container, verify it's running and start tests
           command: |
