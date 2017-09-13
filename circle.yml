@@ -15,12 +15,21 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    machine: true
+    docker:
+      - image: docker:17.09.0-ce-git
     working_directory: ~/addons-server
     steps:
+      - run: apt-get --assume-yes update && apt-get -y --no-install-recommends install curl wget ca-certificates
       - run:
           name: Install Docker Compose
-          command: pip install docker-compose
+          command: |
+            set -x
+            curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+      - setup_remote_docker
+      - run:
+          name: Install git
+          command: apt-get --assume-yes install git
       - checkout
       - run: git clone https://github.com/mozilla/addons-frontend.git
       - run:
@@ -28,19 +37,25 @@ jobs:
           command: mkdir /tmp/artifacts
       - run:
           command: |
-              curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-              echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-              sudo apt-get -y update
-              sudo apt-get --assume-yes install yarn
+              apt-get --assume-yes install apt-transport-https
+              curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+              echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+              apt-get --assume-yes update
+              apt-get --assume-yes install yarn
       - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run:
-          name: Start Containers and run test
+          name: Start Containers
           command: |
             set -x
             docker-compose up -d
+      - run:
+          name: Run tests
+          command: |
             echo 127.0.0.1 olympia.dev | sudo tee -a /etc/hosts
             export DISPLAY=:99
-            make uitest
+            pip install tox
+            docker-compose run web ./scripts/setup-docker.sh
+            tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test-1.html
       - store_artifacts:
           path: /tmp/artifacts/ui-test.html
           destination: ui-test.html
