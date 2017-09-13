@@ -11,4 +11,5 @@ python manage.py loaddata zadmin/users
 python manage.py update_permissions_from_mc
 
 # update_assets:
+make update_deps
 make update_assets
