@@ -15,57 +15,21 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    docker:
-      - image: ubuntu:16.04
-    working_directory: ~/addons-server
     steps:
-      - run: apt-get --assume-yes update && apt-get -y --no-install-recommends install curl wget ca-certificates
+      - run:
+        name: Install Docker Compose
+        command: |
+          set -x
+          curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
       - setup_remote_docker
       - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="17.03.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
-      - run:
-          name: Install Docker Compose
-          command: |
-            set -x
-            curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-            chmod +x /usr/local/bin/docker-compose
-      - run:
-          name: Install git
-          command: apt-get --assume-yes install git
-      - checkout
-      - run: git clone https://github.com/mozilla/addons-frontend.git
-      - run:
-          name: Creating Artifacts
-          command: mkdir /tmp/artifacts
-      - run:
-          command: |
-              apt-get --assume-yes install apt-transport-https
-              curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-              echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-              apt-get --assume-yes update
-              apt-get --assume-yes install yarn
-      - run:
-          name: Start Containers
+          name: Start container, verify it's running and start tests
           command: |
             set -x
             docker-compose up -d
-      - run:
-          name: Run tests
-          command: |
-            echo 127.0.0.1 olympia.dev | tee -a /etc/hosts
-            export DISPLAY=:99
-            pip install tox
-            docker-compose run web ./scripts/setup-docker.sh
-            tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test-1.html
-      - store_artifacts:
-          path: /tmp/artifacts/ui-test.html
-          destination: ui-test.html
+            docker-compose run web
+            docker-compose exec web tox -e ui-tests-1
 workflows:
   version: 2
   build_and_test:
