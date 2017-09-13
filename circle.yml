@@ -57,12 +57,7 @@ jobs:
             docker-compose up -d
       - run:
           name: Run tests
-          command: |
-            echo 127.0.0.1 olympia.dev | tee -a /etc/hosts
-            export DISPLAY=:99
-            pip install tox
-            docker-compose run web ./scripts/setup-docker.sh
-            tox -e ui-tests-1 -- --html=/tmp/artifacts/ui-test-1.html
+          command: ./scripts/ui-test.sh
       - store_artifacts:
           path: /tmp/artifacts/ui-test.html
           destination: ui-test.html
