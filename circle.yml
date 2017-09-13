@@ -43,7 +43,7 @@ jobs:
             docker-compose run web make -f Makefile-docker initialize_db
 
             # Try and wait for the container to get ready
-            docker run --network container:web \
+            docker run --network container:addonsserver_web_1 \
               appropriate/curl --retry 10 --retry-delay 1 --retry-connrefused http://localhost:8000/
 
             # Run ui-tests
