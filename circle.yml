@@ -15,7 +15,8 @@ jobs:
           > version.json
       - run: echo "Docker deploy here."
   integration_test:
-    machine: True
+    docker:
+      - image: ubuntu:16.04
     working_directory: ~/addons-server
     steps:
       - run: apt-get --assume-yes update && apt-get -y --no-install-recommends install curl wget ca-certificates
@@ -57,7 +58,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            echo 127.0.0.1 olympia.dev | tee -a /etc/hosts
+            echo 127.0.0.1 olympia.dev | sudo tee -a /etc/hosts
             export DISPLAY=:99
             pip install tox
             docker-compose run web ./scripts/setup-docker.sh
