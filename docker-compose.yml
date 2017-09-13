@@ -2,8 +2,9 @@ version: "2"
 
 services:
   worker: &worker
-    build: .
+    image: addons/addons-server
     command: supervisord -n -c /code/docker/supervisor-celery.conf
+    entrypoint: /code/scripts/start-docker.sh
     volumes:
       - .:/code
     environment:
