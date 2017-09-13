@@ -28,8 +28,7 @@ jobs:
           command: |
             set -x
             docker-compose up -d
-            docker-compose run web
-            docker-compose exec web tox -e ui-tests-1
+            ./scripts/ui-test.sh
 workflows:
   version: 2
   build_and_test:
