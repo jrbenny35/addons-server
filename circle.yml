@@ -32,7 +32,6 @@ jobs:
             docker-compose exec web yum -y install curl
             curl https://raw.githubusercontent.com/creationix/nvm/v0.30.2/install.sh > install-nvm.sh
             docker-compose exec web bash /code/install-nvm.sh
-            docker-compose exec web bash exec $SHELL
             docker-compose exec web nvm install node
             docker-compose exec web bash /code/scripts/setup-docker.sh
 
