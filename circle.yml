@@ -17,7 +17,7 @@ jobs:
   integration_test:
     working_directory: ~/addons-server
     docker:
-      image: buildpack-deps:jessie-scm
+      - image: buildpack-deps:jessie-scm
     steps:
       - checkout
       - setup_remote_docker
