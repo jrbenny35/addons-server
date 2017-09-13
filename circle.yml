@@ -42,7 +42,6 @@ jobs:
               echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
               apt-get --assume-yes update
               apt-get --assume-yes install yarn
-      - run: ./tests/ui/circleci/install-test-depenencies.sh
       - run:
           name: Start Containers
           command: |
