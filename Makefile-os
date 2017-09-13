@@ -58,6 +58,7 @@ dbshell:
 
 uitest:
 	docker-compose exec web pip install tox
+	docker-compose exec worker npm install -g npm
 	docker-compose exec web tox -e ui-tests-1
 
 # Run a make command in the container
