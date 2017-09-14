@@ -7,4 +7,5 @@ source ~/.bash_profile
 nvm install node
 unset NPM_CONFIG_PREFIX
 pip install tox
+sudo sysctl -w vm.max_map_count=262144
 tox -e ui-tests
