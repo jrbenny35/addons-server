@@ -8,5 +8,4 @@ source ~/.bash_profile
 nvm install node
 unset NPM_CONFIG_PREFIX
 pip install tox
-sh scripts/setup-docker.sh
 tox -e ui-tests-1
