@@ -30,9 +30,6 @@ jobs:
             set -x
             docker-compose up -d
             sleep 10
-
-            # Run twice because elastic search sometimes doesn't start
-            docker-compose up -d
             docker-compose exec web bash /code/scripts/ui-test.sh
 
 workflows:
