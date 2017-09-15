@@ -54,7 +54,7 @@ class Home(Base):
     class FeaturedExtensions(Region):
         """Featured Extension region"""
         _root_locator = (By.ID, 'featured-extensions')
-        _extension_locator = (By.CSS_SELECTOR, 'section > li > div')
+        _extension_locator = (By.CSS_SELECTOR, 'section > li > .addon')
         _see_all_locator = (By.CSS_SELECTOR, 'h2 > a')
 
         @property

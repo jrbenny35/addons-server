@@ -41,9 +41,7 @@ requests==2.18.3 \
     --hash=sha256:b62be4ec5999c24d10c98d248a136e7db20ca6616a2b65060cd9399417331e8a \
     --hash=sha256:fb68a7baef4965c12d9cd67c0f5a46e6e28be3d8c7b6910c758fbcc99880b518
 # setuptools is required by Sphinx
-setuptools==36.2.7 \
-    --hash=sha256:02b5f3869777dfbfbe3786a057bc6d523445a3e541a0abdf85adbe0b091e96b9 \
-    --hash=sha256:b0fe5d432d922df595e918577c51458d63f245115d141b309ac32ecfca329df5
+setuptools==36.4.0
 # six is required by Sphinx, bleach, cryptography, django-environ, django-extensions, django-tables2, elasticsearch-dsl, html5lib, mock, nobot, pathlib2, prompt-toolkit, pyOpenSSL, sphinxcontrib-httpdomain, traitlets
 six==1.10.0 \
     --hash=sha256:0ff78c403d9bccf5a425a6d31a12aa6b47f1c21ca4dc2573a7e2f32a97335eb1 \
@@ -65,11 +63,10 @@ sphinxcontrib-websupport==1.0.1 \
 snowballstemmer==1.2.1 \
     --hash=sha256:9f3bcd3c401c3e862ec0ebe6d2c069ebc012ce142cce209c098ccb5b09136e89 \
     --hash=sha256:919f26a68b2c17a7634da993d91339e288964f93c274f1343e3bbbe2096e1128
-idna==2.6 \
-    --hash=sha256:8c7309c718f94b3a625cb648ace320157ad16ff131ae0af362c9f21b80ef6ec4 \
-    --hash=sha256:2c6a5de3089009e3da7c5dde64a141dbc8551d5b7f6cf4ed7c2568d0cc520a8f
-certifi==0.0.8 \
-     --hash=sha256:46ecf5f7526a08cc1f8bc8232adf0cffce046f46ceff95539daec42ebc4849ef # pyup: ==0.0.8
+idna==2.5 \
+    --hash=sha256:cc19709fd6d0cbfed39ea875d29ba6d4e22c0cebc510a76d6302a28385e8bb70
+certifi==2017.4.17 \
+    --hash=sha256:f4318671072f030a33c7ca6acaef720ddd50ff124d1388e50c1bda4cbd6d7010
 chardet==3.0.4 \
     --hash=sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691 \
     --hash=sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae

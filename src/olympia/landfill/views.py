@@ -29,11 +29,8 @@ class GenerateAddons(APIView):
 
         if not serializer.is_valid():
             return Response({'errors': serializer.errors}, status=422)
-
-        serializer.create()
-
+        serializer.create_addons()
         cache.clear()
-
         return Response({}, status=201)
 
 
@@ -89,7 +86,7 @@ class RestoreCurrentState(APIView):
                          allow_cascade=False,
                          inhibit_post_migrate=False)
 
-        print('Restore...')
+        # print('Restore...')
         # Restore database to previously known state
         connection.creation.deserialize_db_from_string(data)
 
