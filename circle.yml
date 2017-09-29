@@ -23,6 +23,15 @@ jobs:
     machine: true
     steps:
       - checkout
+      - run:
+          name: Install Docker Compose
+          command: |
+            set -x
+            sudo pip install docker-compose
+      - run:
+          name: Start containers.
+          command: |
+            docker-compose up -d
       - restore_cache:
           keys:
             - uitest-cache-{{ checksum "requirements/docs.txt" }}
@@ -31,17 +40,10 @@ jobs:
             - uitest-cache-{{ checksum "requirements/uitests.txt" }}
             - uitest-cache-
       - run:
-          name: Install Docker Compose
-          command: |
-            set -x
-            sudo pip install docker-compose
-      - run:
-          name: Start container, verify it's running and start tests
+          name: Start tests.
           command: |
             set -x
             sudo sysctl -w vm.max_map_count=262144
-            docker-compose up -d
-            sleep 10
             docker-compose exec web bash /code/scripts/ui-test.sh
       - store_artifacts:
           path: ui-test-results
@@ -49,22 +51,27 @@ jobs:
           key: uitest-cache-{{ checksum "requirements/docs.txt" }}
           paths:
             - .tox
+            - var/lib/mysql/olympia
       - save_cache:
           key: uitest-cache-{{ checksum "requirements/prod.txt" }}
           paths:
             - .tox
+            - var/lib/mysql/olympia
       - save_cache:
           key: uitest-cache-{{ checksum "requirements/dev.txt" }}
           paths:
             - .tox
+            - var/lib/mysql/olympia
       - save_cache:
           key: uitest-cache-{{ checksum "requirements/uitests.txt" }}
           paths:
             - .tox
+            - var/lib/mysql/olympia
       - save_cache:
           key: uitest-cache-
           paths:
             - .tox
+            - var/lib/mysql/olympia
   deploy:
     machine: true
     steps:
