@@ -7,4 +7,4 @@ source ~/.bash_profile
 nvm install node
 unset NPM_CONFIG_PREFIX
 pip install tox
-tox -e ui-tests
+tox -e ui-tests-circleci

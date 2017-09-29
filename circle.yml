@@ -34,6 +34,7 @@ jobs:
             docker-compose up -d
       - restore_cache:
           keys:
+            - uitest-cache-{{ checksum "var/lib/mysql/olympia"}}
             - uitest-cache-{{ checksum "requirements/docs.txt" }}
             - uitest-cache-{{ checksum "requirements/prod.txt" }}
             - uitest-cache-{{ checksum "requirements/dev.txt" }}
@@ -48,6 +49,9 @@ jobs:
       - store_artifacts:
           path: ui-test-results
       - save_cache:
+          key: uitest-cache-{{ checksum "var/lib/mysql/olympia"}}
+          paths:
+            - var/lib/mysql/olympia
           key: uitest-cache-{{ checksum "requirements/docs.txt" }}
           paths:
             - .tox
