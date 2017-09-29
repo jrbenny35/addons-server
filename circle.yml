@@ -49,7 +49,7 @@ jobs:
       - store_artifacts:
           path: ui-test-results
       - save_cache:
-          key: uitest-cache-{{ checksum "var/lib/mysql/olympia"}}
+          key: uitest-cache-{{ checksum "~/var/lib/mysql/olympia"}}
           paths:
             - var/lib/mysql/olympia
           key: uitest-cache-{{ checksum "requirements/docs.txt" }}
